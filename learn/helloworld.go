@@ -25,7 +25,7 @@ func (t *HelloWorldChaincode) Invoke(stub shim.ChaincodeStubInterface, function 
 func (t *HelloWorldChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Printf("HelloWorld - Query called with function %s!\n", function)
 
-	message := "Hello World"
+	message := "Hello World1111"
 	return []byte(message), nil;
 }
 
