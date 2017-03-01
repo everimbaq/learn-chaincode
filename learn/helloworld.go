@@ -18,8 +18,8 @@ func (t *HelloWorldChaincode) Init(stub shim.ChaincodeStubInterface, function st
 
 func (t *HelloWorldChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Printf("HelloWorld - Invoke called with function %s!\n", function)
-
-	return nil, nil
+	message := "Hello World"
+	return []byte(message), nil
 }
 
 func (t *HelloWorldChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
