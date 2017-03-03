@@ -22,6 +22,7 @@ import (
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"time"
+	"strconv"
 )
 
 // SimpleChaincode example simple Chaincode implementation
@@ -35,13 +36,14 @@ func monthly_check(stub shim.ChaincodeStubInterface)  {
 
 	for range tc{
 		fmt.Println("loop once")
-		val, err := stub.GetState("xiaoming_wallet")
-		if err==nil && val != nil{
-			if (int)(string(val)) >= 50 {
-				val, _ := stub.GetState("xiaoming_toy")
-				xiaoming_toy := (int)(string(val))
+		b_money, err := stub.GetState("xiaoming_wallet")
+		if err==nil && b_money != nil{
+			money, _ := strconv.Atoi(string(b_money))
+			if money >= 50 {
+				b_toy, _ := stub.GetState("xiaoming_toy")
+				xiaoming_toy, _ := strconv.Atoi(string(b_toy))
 				xiaoming_toy ++
-				stub.PutState("xiaoming_toy", []byte(fmt.Sprintln(xiaoming_toy)))
+				stub.PutState("xiaoming_toy", []byte(strconv.Itoa(xiaoming_toy)))
 				fmt.Println("xiaoming has", xiaoming_toy, " toys now ", time.Now())
 			}
 		}
