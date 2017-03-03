@@ -22,8 +22,6 @@ import (
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"time"
-	"encoding/binary"
-	"strconv"
 )
 
 // SimpleChaincode example simple Chaincode implementation
@@ -32,25 +30,6 @@ type SimpleChaincode struct {
 
 
 
-
-func bytesToInt(buf []byte) uint32{
-	num := binary.BigEndian.Uint32(buf)
-	return num
-}
-
-func intToByte(num uint32) []byte{
-	var buf = make([]byte, 8)
-	binary.BigEndian.PutUint32(buf, uint32(num))
-	return buf
-}
-
-func intbytesToBytes(buf []byte)  []byte{
-	num := bytesToInt(buf)
-	str := fmt.Sprint(num)
-	return []byte(str)
-
-
-}
 func monthly_check(stub shim.ChaincodeStubInterface)  {
 	tc:=time.Tick(5*time.Second)
 
@@ -58,15 +37,13 @@ func monthly_check(stub shim.ChaincodeStubInterface)  {
 		fmt.Println("loop once")
 		val, err := stub.GetState("xiaoming_wallet")
 		if err==nil && val != nil{
-			xiaoming_money := bytesToInt(val)
-			var xiaoming_toy uint32
-			if xiaoming_money >= 50 {
+			if (int)(string(val)) >= 50 {
 				val, _ := stub.GetState("xiaoming_toy")
-				xiaoming_toy = bytesToInt(val)
+				xiaoming_toy := (int)(string(val))
 				xiaoming_toy ++
-				stub.PutState("xiaoming_toy", intToByte(xiaoming_toy))
+				stub.PutState("xiaoming_toy", []byte(fmt.Sprintln(xiaoming_toy)))
+				fmt.Println("xiaoming has", xiaoming_toy, " toys now ", time.Now())
 			}
-			fmt.Println("xiaoming has", xiaoming_toy, " toys now ", time.Now())
 		}
 	}
 }
@@ -136,8 +113,7 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 
 	key = args[0] //rename for funsies
 	value = args[1]
-	num,err:=strconv.Atoi(value)
-	err = stub.PutState(key, intToByte(uint32(num))) //write the variable into the chaincode state
+	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
 	}
