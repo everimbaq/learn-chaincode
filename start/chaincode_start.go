@@ -47,7 +47,9 @@ func monthly_check(stub *shim.ChaincodeStubInterface)  {
 				fmt.Println("current num", xiaoming_toy, strconv.Itoa(xiaoming_toy))
 				xiaoming_toy ++
 				(*stub).PutState("xiaoming_toy", []byte(strconv.Itoa(xiaoming_toy)))
+				b_toy2, err2 := (*stub).GetState("xiaoming_toy")
 				fmt.Println("xiaoming has", xiaoming_toy, " toys now ", time.Now(), *stub)
+				fmt.Println("xiaoming has", b_toy2, err2)
 			}
 		}else {
 			fmt.Println("get wallet error", err)
