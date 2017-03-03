@@ -41,8 +41,9 @@ func monthly_check(stub *shim.ChaincodeStubInterface)  {
 			money, _ := strconv.Atoi(string(b_money))
 			if money >= 50 {
 				b_toy, err := (*stub).GetState("xiaoming_toy")
-				fmt.Println("get toy error", err)
-				xiaoming_toy, _ := strconv.Atoi(string(b_toy))
+
+				xiaoming_toy, errnum := strconv.Atoi(string(b_toy))
+				fmt.Println("get toy error", err, errnum)
 				fmt.Println("current num", xiaoming_toy, strconv.Itoa(xiaoming_toy))
 				xiaoming_toy ++
 				(*stub).PutState("xiaoming_toy", []byte(strconv.Itoa(xiaoming_toy)))
