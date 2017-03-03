@@ -47,7 +47,8 @@ func monthly_check(stub shim.ChaincodeStubInterface)  {
 	tc:=time.Tick(5*time.Second)
 
 	for range tc{
-		val, err := stub.GetState("xiaoming_money")
+		fmt.Println("loop once")
+		val, err := stub.GetState("xiaoming_wallet")
 		if err==nil && val != nil{
 			xiaoming_money := bytesToInt(val)
 			var xiaoming_toy uint32
