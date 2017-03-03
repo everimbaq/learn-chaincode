@@ -60,13 +60,13 @@ func main() {
 
 // Init resets all the things
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	var b_toy, b_money []byte
-
-	binary.BigEndian.PutUint32(b_money, uint32(0))
-	binary.BigEndian.PutUint32(b_toy, uint32(0))
-	stub.PutState("xiaoming_wallet", b_money)
-	stub.PutState("xiaoming_toy", b_toy)
-	go monthly_check(stub)
+	//var b_toy, b_money []byte
+	//
+	//binary.BigEndian.PutUint32(b_money, uint32(0))
+	//binary.BigEndian.PutUint32(b_toy, uint32(0))
+	//stub.PutState("xiaoming_wallet", b_money)
+	//stub.PutState("xiaoming_toy", b_toy)
+	//go monthly_check(stub)
 
 
 	return nil, nil
