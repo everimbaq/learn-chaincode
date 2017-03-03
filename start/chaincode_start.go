@@ -59,15 +59,14 @@ func main() {
 
 // Init resets all the things
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 1")
-	}
-
-	//err := stub.PutState("xiaoming_wallet", []byte(args[0]))
+	var b_toy= make([]byte, 8)
+	var b_money = make([]byte, 8)
+	binary.BigEndian.PutUint32(b_money, uint32(0))
+	binary.BigEndian.PutUint32(b_toy, uint32(0))
+	stub.PutState("xiaoming_wallet", b_money)
+	stub.PutState("xiaoming_toy", b_toy)
 	go monthly_check(stub)
-	//if err != nil {
-	//	return nil, err
-	//}
+
 
 	return nil, nil
 }
