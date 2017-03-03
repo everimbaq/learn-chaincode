@@ -35,8 +35,9 @@ var xiaoming_toy int = 0
 func monthly_check(stub shim.ChaincodeStubInterface)  {
 	tc:=time.Tick(5*time.Second)
 	val, _ := stub.GetState("xiaoming_money")
-	xiaoming_money := binary.BigEndian.Uint32(val)
+
 	for range tc{
+		xiaoming_money := binary.BigEndian.Uint32(val)
 		if xiaoming_money >= 50 {
 			val, _ := stub.GetState("xiaoming_toy")
 			xiaoming_toy := binary.BigEndian.Uint32(val)
@@ -62,11 +63,11 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
 
-	err := stub.PutState("xiaoming_wallet", []byte(args[0]))
+	//err := stub.PutState("xiaoming_wallet", []byte(args[0]))
 	go monthly_check(stub)
-	if err != nil {
-		return nil, err
-	}
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	return nil, nil
 }

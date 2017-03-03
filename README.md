@@ -1,135 +1,54 @@
-# Learn Chaincode
-
-A tutorial to get you started with writing smart contracts for Hyperledger.
-
-# Deployment
-
-In order to support multiple versions of the Hyperledger fabric, this repository uses branches in combination with gopkg.in URLs. What does this mean for beginners? Just pick the branch below and use the instructions for that branch to complete the tutorial
-
-## Versions and Supported Platforms
-
-- [v1.0](https://github.com/ibm-blockchain/learn-chaincode/tree/v1.0)
-
-  - Hyperledger fabric v0.5-developer-preview
-  - IBM Bluemix Blockchain Service v0.4.2
-
-- [v2.0](https://github.com/ibm-blockchain/learn-chaincode/tree/v2.0)
-
-  - Hyperledger fabric v0.6-developer-preview
-  - IBM Bluemix Blockchain Service v1.0.0
-
-If you'd like to just deploy the sample code without completing the tutorial, then use the following URLs for the path parameter when deploying via the fabric REST API. Choose the URL that corresponds to the branch you are using above.
+# 安装部署
+    0.6版本为准，1.0还未正式发布
+## 安装docker
+## 安装Fabric
+从 docker hub 获取镜像
+```bash
+docker pull hyperledger/fabric-peer:latest
+docker pull hyperledger/fabric-membersrvc:latest
+```
+## 创建docker配置文件
+```yaml
+membersrvc:
+  image: hyperledger/fabric-membersrvc
+  ports:
+    - "7054:7054"
+  command: membersrvc
+vp0:
+  image: hyperledger/fabric-peer
+  ports:
+    - "7050:7050"
+    - "7051:7051"
+    - "7053:7053"
+  environment:
+    - CORE_PEER_ADDRESSAUTODETECT=true
+    - CORE_VM_ENDPOINT=unix:///var/run/docker.sock
+    - CORE_LOGGING_LEVEL=DEBUG
+    - CORE_PEER_ID=vp0
+    - CORE_PEER_PKI_ECA_PADDR=membersrvc:7054
+    - CORE_PEER_PKI_TCA_PADDR=membersrvc:7054
+    - CORE_PEER_PKI_TLSCA_PADDR=membersrvc:7054
+    - CORE_SECURITY_ENABLED=true
+    - CORE_SECURITY_ENROLLID=test_vp0
+    - CORE_SECURITY_ENROLLSECRET=MwYpmSRjupbT
+  links:
+    - membersrvc
+  command: sh -c "sleep 5; peer node start --peer-chaincodedev"
 
 ```
-http://gopkg.in/ibm-blockchain/learn-chaincode.v1/finished
-OR
-http://gopkg.in/ibm-blockchain/learn-chaincode.v2/finished
-```
-
-# How to write chaincode
-
-This tutorial demonstrates the basic building blocks and functionality necessary to build an elementary [Hyperledger fabric](https://gerrit.hyperledger.org/r/#/admin/projects/fabric) chaincode application. You will be incrementally building up to a working chaincode that will be able to create generic assets. Then, you will interact with the chaincode by using the network's API. After reading and completing this tutorial, you should be able to explicitly answer the following questions:
-
-- What is chaincode?
-- How do I implement the chaincode?
-- What dependencies are required to implement chaincode?
-- What are the major functions?
-- How do I compile my chaincode?
-- How do I pass different values to my arguments?
-- How do I securely enroll a user on my network?
-- How do I interact with my chaincode by using the REST API?
-
-## What is chaincode?
-
-Chaincode is a piece of code that is deployed into a network of [Hyperledger fabric](https://gerrit.hyperledger.org/r/#/admin/projects/fabric) peer nodes that enables interaction with that network's shared ledger.
-
---------------------------------------------------------------------------------
-
-# Implementing Your First Chaincode
-
-## Setting Up Your Development Environment
-
-Before you get started, you should go [here](docs/setup.md) and build your chaincode development environment. When you come back, you'll have all the tools you need to get through this tutorial.
-
-## Setting Up Your Development Pipeline
-
-The following tasks take you through the process of building a pipeline that will allow you to build chaincode effectively. In short, your pipeline for iterating on chaincode will consist of the following steps:
-
-- Make changes to the given chaincode on your local machine and check that the code compiles.
-- Push your updates to GitHub.
-- Deploy your updated chaincode to your local Hyperledger network using the fabric REST API.
-- Test your chaincode using the fabric REST API.
-- Repeat.
-
-1. Fork this repository to your GitHub account. This can be accomplished quickly by scrolling up and clicking the __Fork__ button at the top of this repository.
-
-  ![Fork Button Screenshot](imgs/fork.png)
-
-  "Forking" the repository means creating a copy of this repository under your GitHub account. Note that the fork will fork the entire repository including all the branches. Toggle the __Branch__ button on the left to see the available branches.
-
-  ![Branch Button Screenshot](imgs/branch.png)
-
-2. Clone your fork into your $GOPATH.
-
-  ```bash
-  cd $GOPATH
-  mkdir -p src/github.com/<YOUR_GITHUB_ID_HERE>/
-  cd src/github.com/<YOUR_GITHUB_ID_HERE>/
-  git clone -b v1.0 https://github.com/<YOUR_GITHUB_ID_HERE>/learn-chaincode.git
-  OR
-  git clone -b v2.0 https://github.com/<YOUR_GITHUB_ID_HERE>/learn-chaincode.git
-  ```
-
-  Now, you have a copy of your fork on your machine. You will develop your chaincode by making changes to these local files, pushing them to your fork on GitHub, and then deploying the code onto your blockchain network using the REST API on one of your peers.
-
-3. Notice that we have provided two different versions of the chaincode used in this tutorial: [Start](start/chaincode_start.go) - the skeleton chaincode from which you will start developing, and [Finished](finished/chaincode_finished.go) - the finished chaincode.
-
-4. Make sure it builds in your local environment:
-
-  - Open a terminal or command prompt
-
-  ```bash
-  cd $GOPATH/src/github.com/<YOUR_GITHUB_ID_HERE>/learn-chaincode/start
-  go build ./
-  ```
-
-  - It should compile with no errors/text. If not, make sure that you have correctly installed Go per the [development environment setup instructions](docs/setup.md).
-
-5. Push the changes back to your fork on GitHub.
-
-  ```bash
-  cd $GOPATH/src/github.com/<YOUR_GITHUB_ID_HERE>/learn-chaincode/
-  # See what files have changed locally.  You should see chaincode_start.go
-  git status
-  # Stage all changes in the local repository for commit
-  git add --all
-  # Commit all staged changes.  Insert a short description after the -m argument
-  git commit -m "Compiled my code"
-  # Push local commits back to https://github.com/<YOUR_GITHUB_ID_HERE>/learn-chaincode/
-  git push
-  ```
-
-In order to turn a piece of Go code into chaincode, all you need to do is implement the chaincode shim interface. The three functions you have to implement are **Init**, **Invoke**, and **Query**. All three functions have the same prototype; they take in a 'stub', which is what you use to read from and write to the ledger, a function name, and an array of strings. The main difference between the functions is when they will be called. In this tutorial you will be building a chaincode to create generic assets.
-
-### Dependencies
-
-The `import` statement lists a few dependencies that you will need for your chaincode to build successfully.
-
-- `fmt` - contains `Println` for debugging/logging.
-- `errors` - standard go error format.
-- `github.com/hyperledger/fabric/core/chaincode/shim` - contains the definition for the chaincode interface and the chaincode stub, which you will need to interact with the ledger.
-
+    docker compose up -f docker-compose.yml
+## 部署代码
 ### Init()
 
-Init is called when you first deploy your chaincode. As the name implies, this function should be used to do any initialization your chaincode needs. In our example, we use Init to configure the initial state of a single key/value pair on the ledger.
+Init 在首次部署你的链码时被调用。顾名思义，此函数用于链码所需的所有初始化工作。在我们的示例中，我们使用 Init 函数设置总账一个键值对的初始状态。
 
-In your `chaincode_start.go` file, change the `Init` function so that it stores the first element in the `args` argument to the key "hello_world".
+在你的 `chaincode_start.go` 文件中，修改 `Init` 函数，以便将 `args` 参数中的第一个元素存储到键 “hello_world” 中。
 
 ```go
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 1")
-	}
+    if len(args) != 1 {
+        return nil, errors.New("Incorrect number of arguments. Expecting 1")
+    }
 
     err := stub.PutState("hello_world", []byte(args[0]))
     if err != nil {
@@ -140,19 +59,19 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 }
 ```
 
-This is done by using the stub function `stub.PutState`. The function interprets the first argument sent in the deployment request as the value to be stored under the key 'hello_world' in the ledger. Where did this argument come from, and what is a deploy request? All will be explained after we finish implementing the chaincode interface. If an error occurs because the wrong number of arguments was passed in or because something went wrong when writing to the ledger, then this function will return an error. Otherwise, it exits cleanly, returning nothing.
+这是通过 stub 的 `stub.PutState` 函数完成的。该函数将部署请求中发送的第一个参数解释为要存储在分类帐中的键 “hello_world” 下的值。 这个参数是从哪里来的，什么是部署请求？我们将在实现接口后再解释。如果发生错误，例如传入的参数数量错误，或者写入总账时发生错误，则此函数将返回错误。否则，它将完全退出，什么都不返回。
 
 ### Invoke()
 
-`Invoke` is called when you want to call chaincode functions to do real work. Invocations will be captured as a transactions, which get grouped into blocks on the chain. When you need to update the ledger, you will do so by invoking your chaincode. The structure of `Invoke` is simple. It receives a `function` and an array of arguments. Based on what function was passed in through the `function` parameter in the invoke request, `Invoke` will either call a helper function or return an error.
+当你想调用链码函数来做真正的工作时，`Invoke` 就会被调用。这些调用会被当做交易被分组到链上的区块中。当你需要更新总账时，就会通过调用你的链码去完成。`Invoke` 的结构很简单。它接收一个 `function` 以及一个数组参数，基于调用请求中传递的 `function` 参数所指的函数，`Invoke` 将调用这个辅助函数或者返回错误。
 
-In your `chaincode_start.go` file, change the `Invoke` function so that it calls a generic write function.
+在你的 `chaincode_start.go` 文件中，修改 `Invoke` 函数，让它调用一个普通的 `write` 函数。
 
 ```go
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	fmt.Println("invoke is running " + function)
+    fmt.Println("invoke is running " + function)
 
-    // Handle different functions
+    // 处理不同的函数
     if function == "init" {
         return t.Init(stub, "init", args)
     } else if function == "write" {
@@ -164,42 +83,42 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 }
 ```
 
-Now that it's looking for `write` let's make that function somewhere in your `chaincode_start.go` file.
+现在，它正在寻找 `write` 函数，让我们把这个函数写入你的 `chaincode_start.go` 文件。
 
 ```go
 func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var key, value string
-	var err error
-	fmt.Println("running write()")
+    var key, value string
+    var err error
+    fmt.Println("running write()")
 
-	if len(args) != 2 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
-	}
+    if len(args) != 2 {
+        return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the key and value to set")
+    }
 
-	key = args[0]                            //rename for fun
-	value = args[1]
-	err = stub.PutState(key, []byte(value))  //write the variable into the chaincode state
-	if err != nil {
-		return nil, err
-	}
-	return nil, nil
+    key = args[0]                            //rename for fun
+    value = args[1]
+    err = stub.PutState(key, []byte(value))  //把变量写入链码状态中
+    if err != nil {
+        return nil, err
+    }
+    return nil, nil
 }
 ```
 
-You're probably thinking that this `write` function looks similar to `Init`. It is very similar. Both functions check for a certain number of arguments, and then write a key/value pair to the ledger. However, you'll notice that `write` uses two arguments, allowing you to pass in both the key and the value for the call to `PutState`. Basically, this function allows you to store any key/value pair you want into the blockchain ledger.
+你可能会认为这个 `write` 函数看起来类似 `Init`。 它们确实很像。 这两个函数检查一定数量的参数，然后将一个键/值对写入总账。然而，你会注意到，`write` 函数使用两个参数，允许你同时传递给调用的 `PutState` 键和值。基本上，该函数允许你向区块链总账上存储任意你想要的键值对。
 
 ### Query()
 
-As the name implies, `Query` is called whenever you query your chaincode's state. Queries do not result in blocks being added to the chain, and you cannot use functions like `PutState` inside of `Query` or any helper functions it calls. You will use `Query` to read the value of your chaincode state's key/value pairs.
+顾名思义，无论何时查询链码状态，`Query` 都会被调用。查询操作不会导致区块被添加到链中。你不能在 `Query` 中使用类似 `PutState` 的函数，也不能使用它调用的任何辅助函数。你将使用 `Query` 读取链码状态中键/值对的值。
 
-In your `chaincode_start.go` file, change the `Query` function so that it calls a generic read function, similar to what you did in `Invoke`.
+在你的 `chaincode_start.go` 文件中，修改 `Query` 函数，让它调用一个普通的 `read` 函数，类似你对 `Invoke` 函数的修改。
 
 ```go
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	fmt.Println("query is running " + function)
+    fmt.Println("query is running " + function)
 
-    // Handle different functions
-    if function == "read" {                            //read a variable
+    // 处理不同的函数
+    if function == "read" {                            //读取变量
         return t.read(stub, args)
     }
     fmt.Println("query did not find func: " + function)
@@ -208,12 +127,12 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 }
 ```
 
-Now that it's looking for `read`, let's create that helper function somewhere in your `chaincode_start.go` file.
+现在，它正在寻找 `read` 函数，让我们在 `chaincode_start.go` 文件中创建该函数。
 
 ```go
 func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var key, jsonResp string
-	var err error
+    var key, jsonResp string
+    var err error
 
     if len(args) != 1 {
         return nil, errors.New("Incorrect number of arguments. Expecting name of the key to query")
@@ -230,11 +149,11 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 }
 ```
 
-This `read` function is using the complement to `PutState` called `GetState`. While `PutState` allows you to set a key/value pair, `GetState` lets you read the value for a previously written key. You can see that the single argument used by this function is taken as the key for the value that should be retrieved. Next, this function returns the value as an array of bytes back to `Query`, who in turn sends it back to the REST handler.
+这个 `read` 函数使用了与 `PutState` 作用相反的 `GetState`。 `PutState` 允许你对一个键/值对赋值，`GetState`允许你读取之前赋值的键的值。你可以看到，该函数使用的唯一参数被作为应该检索的值的键。接下来，此函数将字符数组返回到 `Query`，然后将它返回给 REST 句柄。
 
 ### Main()
 
-Finally, you need to create a short `main` function that will execute when each peer deploys their instance of the chaincode. It just calls `shim.Start()`, which sets up the communication between this chaincode and the peer that deployed it. You don't need to add any code for this function. Both `chaincode_start.go` and `chaincode_finished.go` have a `main` function that lives at the top of the file. The function looks like this:
+最后，你需要创建一个简短的 `main` 函数，它在每个节点部署链码实例的时候执行。它仅仅调用了 `shim.Start()`，该函数会在链码与部署链码的节点之间建立通信。你不需要为该函数添加任何代码。`chaincode_start.go` 和 `chaincode_finished.go` 都有一个 `main` 函数，它位于文件的顶部。该函数如下所示：
 
 ```go
 func main() {
@@ -243,186 +162,3 @@ func main() {
         fmt.Printf("Error starting Simple chaincode: %s", err)
     }
 }
-```
-
-### Need Help?
-
-If you're stuck or confused at any point, just go check out the `chaincode_finished.go` file. Use this file to validate that the code snippets you're building into chaincode_start.go are correct.
-
-# Interacting with Your First Chaincode
-
-The fastest way to test your chaincode is to use the REST interface on your peers. If you're using the blockchain service on Bluemix, you should follow the steps described [here](https://console.ng.bluemix.net/docs/services/blockchain/ibmblockchain_tutorials.html). Otherwise, we recommend using a tool like Postman, as described in the [environment setup documentation](docs/setup.md). There are two REST endpoints we will be interacting with: `/chaincode` and `/registrar`.
-
-- `/chaincode` is the endpoint used for deploying, invoking, and querying chaincode. Which operation you perform is controlled by the body of the request that you send.
-- `/registrar` allows you to enroll users. Why does this matter? Read on!
-
-### Secure Enrollment
-
-Calls to the `/chaincode` endpoint of the REST interface require a secure context ID to be included in the body of the request. This means that you must first enroll a user from the user list in the membership service for your network.
-
-- Find an available user to enroll on one of your peers. This will most likely require you to grab a user from the [membersrvc.yaml](https://github.com/hyperledger/fabric/blob/v0.6/membersrvc/membersrvc.yaml#L199) file for your network. That link points to an example file from the fabric repository. Unless you are running on Bluemix, it is most likely that you will have the same users in your membership service as the ones listed in that file. Look for the section that has a list of users like this:
-
-  ```
-  ...
-  test_user0: 1 MS9qrN8hFjlE bank_a        00001
-  test_user1: 1 jGlNl6ImkuDo institution_a 00007
-  test_user2: 1 zMflqOKezFiA bank_c        00008
-  ...
-  ```
-- All we care about are the usernames and secrets for these users. Open up a notepad and copy one set of credentials. You will use them to enroll the user.
-
-  ```
-  test_user0 MS9qrN8hFjlE
-  ```
-
-- Create an enrollment POST request in Postman like the example below.
-
-  ![/registrar POST](imgs/registrar_post.png)
-
-- You can see that we sent the username and secret to the `/registrar` endpoint of a peer. If you're wondering where the rest of that url came from, it came from my blockchain Bluemix service credentials. You can find this information yourself on the **Service Credentials** tab of the blockchain service on your Bluemix dashboard or the **Network** tab of your blockchain service dashboard.
-
-- The body for the request:
-
-  ```json
-  {
-    "enrollId": "<YOUR_USER_HERE>",
-    "enrollSecret": "<YOUR_SECRET_HERE>"
-  }
-  ```
-
-- Send the request. If everything goes smoothly, you will see a response like the one below:
-
-  ![/registrar response](imgs/registrar_post_response.png)
-
-  If you didn't receive a "Login successful" response, go back and make sure you properly copied your enrollment ID and secret. Now, you have an ID that you can use when deploying, invoking, and querying chaincode in the subsequent steps.
-
-### Deploying the chaincode
-
-In order to deploy chaincode through the REST interface, you will need to have the chaincode stored in a public git repository. When you send a deploy request to a peer, you send it the url to your chaincode repository, as well as the parameters necessary to initialize the chaincode.
-
-**Before you deploy** the code, make sure it builds locally!
-
-- Open a terminal
-- Browse to the folder that contains `chaincode_start.go` and try to build your chaincode:
-
-  ```bash
-    cd $GOPATH/src/github.com/<YOUR_GITHUB_ID_HERE>/learn-chaincode/start
-    go build ./
-  ```
-
-- It should return with no errors/text. This indicates that your chaincode compiled successfully. A good omen.
-
-- Create a POST request like the example below.
-
-  ![/chaincode deploy example](imgs/deploy_example.PNG)
-
-- **Note**: Be sure to issue your deployment to same peer on which you enrolled your user. In this scenario, it is vp3.
-
-- The body for the request:
-
-  ```json
-  {
-    "jsonrpc": "2.0",
-    "method": "deploy",
-    "params": {
-      "type": 1,
-      "chaincodeID": {
-        "path": "https://github.com/<YOUR_GITHUB_ID_HERE>/learn-chaincode/finished"
-      },
-      "ctorMsg": {
-        "function": "init",
-        "args": [
-          "hi there"
-        ]
-      },
-      "secureContext": "<YOUR_USER_HERE>"
-    },
-    "id": 1
-  }
-  ```
-
-- The `"path":` is the path to your fork of the repository on Github, going one more directory down into `/finished`, where your `chaincode_finished.go` file lives.
-
-- Send the request. If everything goes smoothly, you will see a response like the one below
-
-  ![/chaincode deploy response](imgs/deploy_response.PNG)
-
-The long string response for the deployment will contain an ID that is associated with this chaincode. The ID is a 128 character alphanumeric hash. Copy this ID on your notepad as well. You should now have a set of enrollID credentials and the cryptographic hash representing your chaincode. This is how you will reference the chaincode in any future Invoke or Query transactions.
-
-### Query
-
-Next, let's query the chaincode for the value of `hello_world`, the key we set with the `Init` function.
-
-- Create a POST request like the example below.
-
-  ![/chaincode query example](imgs/query_example.PNG)
-
-- The body for the request:
-
-  ```json
-  {
-    "jsonrpc": "2.0",
-    "method": "query",
-    "params": {
-      "type": 1,
-      "chaincodeID": {
-        "name": "<CHAINCODE_HASH_HERE>"
-      },
-      "ctorMsg": {
-        "function": "read",
-        "args": [
-          "hello_world"
-        ]
-      },
-      "secureContext": "<YOUR_USER_HERE>"
-    },
-    "id": 2
-  }
-  ```
-
-- Send the request. If everything goes smoothly, you will see a response like the one below
-
-  ![/chaincode query response](imgs/query_response.PNG)
-
-Hopefully you see that the value of `hello_world` is "hi there", as you specified in the body of the deploy request.
-
-### Invoke
-
-Next, call your generic `write` function by invoking your chaincode and changing the value of "hello_world" to "go away".
-
-- Create a POST request like the example below.
-
-  ![/chaincode invoke example](imgs/invoke_example.PNG)
-
-- The body for the request:
-
-  ```json
-  {
-    "jsonrpc": "2.0",
-    "method": "invoke",
-    "params": {
-      "type": 1,
-      "chaincodeID": {
-        "name": "<CHAINCODE_HASH_HERE>"
-      },
-      "ctorMsg": {
-        "function": "write",
-        "args": [
-          "hello_world", "go away"
-        ]
-      },
-      "secureContext": "<YOUR_USER_HERE>"
-    },
-    "id": 3
-  }
-  ```
-
-- Send the request. If everything goes smoothly, you will see a response like the one below:
-
-  ![/chaincode invoke response](imgs/invoke_response.PNG)
-
-- Test if our change stuck by sending another query like the one from before.
-
-  ![/chaincode query2 response](imgs/query2_response.PNG)
-
-That's all it takes to write basic chaincode.
