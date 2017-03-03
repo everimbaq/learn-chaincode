@@ -30,7 +30,7 @@ type SimpleChaincode struct {
 }
 
 
-var xiaoming_toy int = 0
+
 
 func monthly_check(stub shim.ChaincodeStubInterface)  {
 	tc:=time.Tick(5*time.Second)
@@ -40,9 +40,10 @@ func monthly_check(stub shim.ChaincodeStubInterface)  {
 		val, err := stub.GetState("xiaoming_money")
 		if err==nil{
 			xiaoming_money := binary.BigEndian.Uint32(val)
+			var xiaoming_toy uint32
 			if xiaoming_money >= 50 {
 				val, _ := stub.GetState("xiaoming_toy")
-				xiaoming_toy := binary.BigEndian.Uint32(val)
+				xiaoming_toy = binary.BigEndian.Uint32(val)
 				xiaoming_toy ++
 				var buf = make([]byte, 8)
 				binary.BigEndian.PutUint32(buf, uint32(xiaoming_toy))
