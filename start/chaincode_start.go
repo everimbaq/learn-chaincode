@@ -102,8 +102,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	} else if function == "write" {
 		return t.write(stub, args)
 	}else if function == "bet"{
-		stub.PutState("xiaoming_wallet", intToByte(50))
-		stub.PutState("xiaoming_toy", intToByte(1))
+		stub.PutState("xiaoming_wallet", []byte("50"))
+		stub.PutState("xiaoming_toy", []byte("0"))
 		return nil, nil
 	}
 	fmt.Println("invoke did not find func: " + function)
@@ -160,5 +160,5 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 		return nil, errors.New(jsonResp)
 	}
 
-	return intbytesToBytes(valAsbytes), nil
+	return valAsbytes, nil
 }
