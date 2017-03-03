@@ -43,6 +43,14 @@ func intToByte(num uint32) []byte{
 	binary.BigEndian.PutUint32(buf, uint32(num))
 	return buf
 }
+
+func intbytesToBytes(buf []byte)  []byte{
+	num := bytesToInt(buf)
+	str := fmt.Sprint(num)
+	return []byte(str)
+
+
+}
 func monthly_check(stub shim.ChaincodeStubInterface)  {
 	tc:=time.Tick(5*time.Second)
 
@@ -152,5 +160,5 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
 		return nil, errors.New(jsonResp)
 	}
 
-	return valAsbytes, nil
+	return intbytesToBytes(valAsbytes), nil
 }
