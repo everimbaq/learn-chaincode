@@ -23,6 +23,7 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"time"
 	"encoding/binary"
+	"strconv"
 )
 
 // SimpleChaincode example simple Chaincode implementation
@@ -32,26 +33,32 @@ type SimpleChaincode struct {
 
 
 
+func bytesToInt(buf []byte) uint32{
+	num := binary.BigEndian.Uint32(buf)
+	return num
+}
+
+func intToByte(num uint32) []byte{
+	var buf = make([]byte, 8)
+	binary.BigEndian.PutUint32(buf, uint32(num))
+	return buf
+}
 func monthly_check(stub shim.ChaincodeStubInterface)  {
 	tc:=time.Tick(5*time.Second)
-
 
 	for range tc{
 		val, err := stub.GetState("xiaoming_money")
 		if err==nil{
-			xiaoming_money := binary.BigEndian.Uint32(val)
+			xiaoming_money := bytesToInt(val)
 			var xiaoming_toy uint32
 			if xiaoming_money >= 50 {
 				val, _ := stub.GetState("xiaoming_toy")
-				xiaoming_toy = binary.BigEndian.Uint32(val)
+				xiaoming_toy = bytesToInt(val)
 				xiaoming_toy ++
-				var buf = make([]byte, 8)
-				binary.BigEndian.PutUint32(buf, uint32(xiaoming_toy))
-				stub.PutState("xiaoming_toy", buf)
+				stub.PutState("xiaoming_toy", intToByte(xiaoming_toy))
 			}
 			fmt.Println("xiaoming has", xiaoming_toy, " toys now ", time.Now())
 		}
-
 	}
 }
 
@@ -116,7 +123,8 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 
 	key = args[0] //rename for funsies
 	value = args[1]
-	err = stub.PutState(key, []byte(value)) //write the variable into the chaincode state
+	num,err:=strconv.Atoi(value)
+	err = stub.PutState(key, intToByte(uint32(num))) //write the variable into the chaincode state
 	if err != nil {
 		return nil, err
 	}
