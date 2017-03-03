@@ -34,9 +34,10 @@ var xiaoming_toy int = 0
 
 func monthly_check(stub shim.ChaincodeStubInterface)  {
 	tc:=time.Tick(5*time.Second)
-	val, _ := stub.GetState("xiaoming_money")
+
 
 	for range tc{
+		val, _ := stub.GetState("xiaoming_money")
 		xiaoming_money := binary.BigEndian.Uint32(val)
 		if xiaoming_money >= 50 {
 			val, _ := stub.GetState("xiaoming_toy")
