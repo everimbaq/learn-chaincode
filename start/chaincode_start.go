@@ -31,19 +31,19 @@ type SimpleChaincode struct {
 
 
 
-func monthly_check(stub shim.ChaincodeStubInterface)  {
+func monthly_check(stub *shim.ChaincodeStubInterface)  {
 	tc:=time.Tick(5*time.Second)
 
 	for range tc{
 		fmt.Println("loop once")
-		b_money, err := stub.GetState("xiaoming_wallet")
+		b_money, err := (*stub).GetState("xiaoming_wallet")
 		if err==nil && b_money != nil{
 			money, _ := strconv.Atoi(string(b_money))
 			if money >= 50 {
-				b_toy, _ := stub.GetState("xiaoming_toy")
+				b_toy, _ := (*stub).GetState("xiaoming_toy")
 				xiaoming_toy, _ := strconv.Atoi(string(b_toy))
 				xiaoming_toy ++
-				stub.PutState("xiaoming_toy", []byte(strconv.Itoa(xiaoming_toy)))
+				(*stub).PutState("xiaoming_toy", []byte(strconv.Itoa(xiaoming_toy)))
 				fmt.Println("xiaoming has", xiaoming_toy, " toys now ", time.Now())
 			}
 		}
@@ -65,7 +65,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	//binary.BigEndian.PutUint32(b_toy, uint32(0))
 	stub.PutState("xiaoming_wallet", []byte("50"))
 	stub.PutState("xiaoming_toy", []byte("0"))
-	go monthly_check(stub)
+	go monthly_check(&stub)
 
 
 	return nil, nil
