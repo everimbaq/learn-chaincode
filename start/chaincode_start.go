@@ -32,7 +32,7 @@ type SimpleChaincode struct {
 
 
 func monthly_check(stub *shim.ChaincodeStubInterface)  {
-	tc:=time.Tick(5*time.Second)
+	tc:=time.Tick(3*time.Second)
 
 	for range tc{
 		fmt.Println("loop once")
@@ -40,12 +40,16 @@ func monthly_check(stub *shim.ChaincodeStubInterface)  {
 		if err==nil && b_money != nil{
 			money, _ := strconv.Atoi(string(b_money))
 			if money >= 50 {
-				b_toy, _ := (*stub).GetState("xiaoming_toy")
+				b_toy, err := (*stub).GetState("xiaoming_toy")
+				fmt.Println("get toy error", err)
 				xiaoming_toy, _ := strconv.Atoi(string(b_toy))
+				fmt.Println("current num", xiaoming_toy, strconv.Itoa(xiaoming_toy))
 				xiaoming_toy ++
 				(*stub).PutState("xiaoming_toy", []byte(strconv.Itoa(xiaoming_toy)))
 				fmt.Println("xiaoming has", xiaoming_toy, " toys now ", time.Now())
 			}
+		}else {
+			fmt.Println("get wallet error", err)
 		}
 	}
 }
