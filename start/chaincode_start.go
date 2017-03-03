@@ -45,11 +45,12 @@ func monthly_check(stub *shim.ChaincodeStubInterface)  {
 				xiaoming_toy, errnum := strconv.Atoi(string(b_toy))
 				fmt.Println("get toy error", err, errnum)
 				fmt.Println("current num", xiaoming_toy, strconv.Itoa(xiaoming_toy))
-				xiaoming_toy ++
-				(*stub).PutState("xiaoming_toy", []byte(strconv.Itoa(xiaoming_toy)))
+				xiaoming_toy = xiaoming_toy + 1
+				puterr := (*stub).PutState("xiaoming_toy", []byte(strconv.Itoa(xiaoming_toy)))
+				fmt.Println("put state error", puterr)
 				b_toy2, err2 := (*stub).GetState("xiaoming_toy")
-				fmt.Println("xiaoming has", xiaoming_toy, " toys now ", time.Now(), *stub)
-				fmt.Println("xiaoming has", b_toy2, err2)
+				fmt.Println("xiaoming has", xiaoming_toy, " toys now ", time.Now())
+				fmt.Println("xiaoming has", b_toy2, err2, )
 			}
 		}else {
 			fmt.Println("get wallet error", err)
