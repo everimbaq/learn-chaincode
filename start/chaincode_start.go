@@ -48,7 +48,7 @@ func monthly_check(stub shim.ChaincodeStubInterface)  {
 
 	for range tc{
 		val, err := stub.GetState("xiaoming_money")
-		if err==nil{
+		if err==nil && val != nil{
 			xiaoming_money := bytesToInt(val)
 			var xiaoming_toy uint32
 			if xiaoming_money >= 50 {
@@ -75,8 +75,8 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	//
 	//binary.BigEndian.PutUint32(b_money, uint32(0))
 	//binary.BigEndian.PutUint32(b_toy, uint32(0))
-	stub.PutState("xiaoming_wallet", intToByte(50))
-	stub.PutState("xiaoming_toy", intToByte(0))
+	//stub.PutState("xiaoming_wallet", intToByte(50))
+	//stub.PutState("xiaoming_toy", intToByte(1))
 	go monthly_check(stub)
 
 
@@ -92,6 +92,10 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return t.Init(stub, "init", args)
 	} else if function == "write" {
 		return t.write(stub, args)
+	}else if function == "bet"{
+		stub.PutState("xiaoming_wallet", intToByte(50))
+		stub.PutState("xiaoming_toy", intToByte(1))
+		return nil, nil
 	}
 	fmt.Println("invoke did not find func: " + function)
 
