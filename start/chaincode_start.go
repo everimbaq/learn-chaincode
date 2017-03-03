@@ -37,17 +37,20 @@ func monthly_check(stub shim.ChaincodeStubInterface)  {
 
 
 	for range tc{
-		val, _ := stub.GetState("xiaoming_money")
-		xiaoming_money := binary.BigEndian.Uint32(val)
-		if xiaoming_money >= 50 {
-			val, _ := stub.GetState("xiaoming_toy")
-			xiaoming_toy := binary.BigEndian.Uint32(val)
-			xiaoming_toy ++
-			var buf = make([]byte, 8)
-			binary.BigEndian.PutUint32(buf, uint32(xiaoming_toy))
-			stub.PutState("xiaoming_toy", buf)
+		val, err := stub.GetState("xiaoming_money")
+		if err==nil{
+			xiaoming_money := binary.BigEndian.Uint32(val)
+			if xiaoming_money >= 50 {
+				val, _ := stub.GetState("xiaoming_toy")
+				xiaoming_toy := binary.BigEndian.Uint32(val)
+				xiaoming_toy ++
+				var buf = make([]byte, 8)
+				binary.BigEndian.PutUint32(buf, uint32(xiaoming_toy))
+				stub.PutState("xiaoming_toy", buf)
+			}
+			fmt.Println("xiaoming has", xiaoming_toy, " toys now ", time.Now())
 		}
-		fmt.Println("xiaoming has", xiaoming_toy, " toys now ", time.Now())
+
 	}
 }
 
@@ -66,7 +69,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 	//binary.BigEndian.PutUint32(b_toy, uint32(0))
 	//stub.PutState("xiaoming_wallet", b_money)
 	//stub.PutState("xiaoming_toy", b_toy)
-	//go monthly_check(stub)
+	go monthly_check(stub)
 
 
 	return nil, nil
